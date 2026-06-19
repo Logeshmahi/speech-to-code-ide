@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Speak &amp; Code — Voice Python IDE</title>
+
+<!-- CodeMirror (code editor + Python syntax highlighting) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css" />
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===== TOP TOOLBAR ===== -->
+  <header class="toolbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">Speak &amp; Code</span>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="btnOpenFolder" class="btn" title="Open a folder from your computer">📁 Open Folder</button>
+      <button id="btnNewFile" class="btn" disabled title="Create a new file in the open folder">＋ File</button>
+      <button id="btnNewFolder" class="btn" disabled title="Create a new subfolder">＋ Folder</button>
+      <button id="btnSave" class="btn" disabled title="Save current file (Ctrl/Cmd+S)">💾 Save</button>
+      <button id="btnCloseFolder" class="btn" disabled title="Close the open folder">✕ Close Folder</button>
+    </div>
+
+    <div class="toolbar-group toolbar-group-right">
+      <button id="btnRun" class="btn btn-accent" title="Run the Python code in your browser">▶ Run</button>
+      <select id="langSelect" class="select" title="Speech recognition language">
+        <option value="en-US">English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="en-IN">English (India)</option>
+      </select>
+      <button id="btnMic" class="btn btn-mic" title="Start/stop voice dictation">
+        <span id="micIcon">🎙️</span> <span id="micLabel">Start Listening</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN BODY: 3 panes ===== -->
+  <div class="workspace">
+
+    <!-- LEFT: file explorer -->
+    <aside class="panel panel-files">
+      <div class="panel-title">Explorer</div>
+      <div id="fileTree" class="file-tree">
+        <p class="empty-hint">No folder open.<br />Click <strong>Open Folder</strong> to begin.</p>
+      </div>
+      <p id="fsWarning" class="fs-warning hidden">
+        ⚠️ Your browser doesn't support folder access (File System Access API).
+        Please use <strong>Chrome</strong> or <strong>Edge</strong> on desktop.
+      </p>
+    </aside>
+
+    <!-- CENTER: editor + console -->
+    <main class="panel panel-editor">
+      <div class="editor-tab">
+        <span id="currentFileName">untitled.py</span>
+        <span id="dirtyDot" class="dirty-dot hidden">●</span>
+      </div>
+      <div id="editorHost" class="editor-host"></div>
+
+      <div class="console">
+        <div class="console-header">
+          <span>Console</span>
+          <button id="btnClearConsole" class="btn-small">Clear</button>
+        </div>
+        <pre id="consoleOutput" class="console-output">Click ▶ Run to execute your Python code here (runs fully in your browser via Pyodide).</pre>
+      </div>
+    </main>
+
+    <!-- RIGHT: voice transcript + commands -->
+    <aside class="panel panel-voice">
+      <div class="panel-title">Voice</div>
+
+      <div class="mode-toggle">
+        <button id="modeCode" class="mode-btn mode-active">Code Mode</button>
+        <button id="modeDictation" class="mode-btn">Dictation Mode</button>
+      </div>
+
+      <div class="transcript-box">
+        <div class="transcript-label">Live transcript</div>
+        <p id="interimTranscript" class="interim">Press “Start Listening” and speak…</p>
+      </div>
+
+      <div class="log-box">
+        <div class="transcript-label">Recognition log</div>
+        <div id="voiceLog" class="voice-log"></div>
+      </div>
+
+      <details class="cheatsheet">
+        <summary>Voice command cheat sheet</summary>
+        <div class="cheatsheet-body">
+          <p class="cs-group">Structure</p>
+          <ul>
+            <li>"define function <em>name</em> with parameters <em>a</em> and <em>b</em>"</li>
+            <li>"class <em>name</em> inherits from <em>base</em>"</li>
+            <li>"if / elif / else / while / for <em>x</em> in <em>y</em>"</li>
+            <li>"try / except <em>error</em> / finally"</li>
+            <li>"raise <em>error</em>" — knows value error, type error, key error, etc.</li>
+            <li>"with <em>expr</em> as <em>var</em>"</li>
+          </ul>
+          <p class="cs-group">Statements</p>
+          <ul>
+            <li>"print <em>expr</em>" · "return <em>expr</em>"</li>
+            <li>"<em>var</em> equals <em>expr</em>"</li>
+            <li>"import <em>module</em>" · "from <em>module</em> import <em>name</em>"</li>
+            <li>"comment <em>text</em>" · "pass" · "break" · "continue"</li>
+          </ul>
+          <p class="cs-group">Symbols (spoken → typed)</p>
+          <ul>
+            <li>plus, minus, times, divided by, modulo, power</li>
+            <li>equals equals, not equal to, greater/less than (or equal to)</li>
+            <li>open/close paren · bracket · brace, colon, comma, dot, quote</li>
+            <li>numbers: "twenty five" → 25</li>
+          </ul>
+          <p class="cs-group">Control</p>
+          <ul>
+            <li>"new line" · "indent" · "dedent"</li>
+            <li>"delete line" · "clear all"</li>
+            <li>"save file" · "run code"</li>
+            <li>"switch to dictation mode" / "switch to code mode"</li>
+          </ul>
+        </div>
+      </details>
+    </aside>
+
+  </div>
+</div>
+
+<!-- CodeMirror core + python mode -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
+<script src="voice.js"></script>
+<script src="filesystem.js"></script>
+<script src="runner.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
