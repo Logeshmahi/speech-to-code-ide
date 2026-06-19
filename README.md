@@ -152,6 +152,3 @@ network/file libraries the way a normal Python install would.
 - UI wiring and the indentation engine are in `app.js`.
 - Styling/theme variables are in `style.css` (`:root` at the top).
 
-Have fun extending it — some natural next additions: a "raise with message"
-pattern, voice-controlled tabs for multiple open files, or saving custom voice
-commands per user.
